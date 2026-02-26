@@ -82,7 +82,7 @@
         const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRreGF6cmhwY3BreXhwZnh2dXhmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIwNzU3MDIsImV4cCI6MjA4NzY1MTcwMn0.cXNlAnqSONG5zv2HIFUreXp_3rg47x3NdQ-3FA5TxFE';
         const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
 
-        const REPO_DEFAULTS = { bird: 'hero.png', pipe: 'pipe.png', gif: 'gameover.gif', bgm: 'bgm.mp3', tap: 'tap.mp3', hit: 'hit.mp3', voice: 'voice.mp3' };
+        const REPO_DEFAULTS = { bird: 'hero.png', pipe: 'pipe.jpg', gif: 'gameover.gif', bgm: 'bgm.mp3', tap: 'tap.mp3', hit: 'hit.mp3', voice: 'voice.mp3' };
         let active = { ...REPO_DEFAULTS };
         const audio = { bgm: new Audio(), tap: new Audio(), hit: new Audio(), voice: new Audio() };
         
@@ -214,4 +214,5 @@
         }
     </script>
 </body>
+
 </html>
