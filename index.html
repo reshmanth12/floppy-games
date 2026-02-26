@@ -9,45 +9,55 @@
         * { -webkit-tap-highlight-color: transparent; -webkit-user-select: none; user-select: none; box-sizing: border-box; }
         body { margin: 0; background: #0b0e1e; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; font-family: sans-serif; }
         #game-container { position: relative; width: 450px; height: 100vh; background: #121526; border-left: 2px solid #333; border-right: 2px solid #333; }
+        
         .screen { position: absolute; inset: 0; background: #121526; display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 300; padding: 20px; text-align: center; }
         .active { display: flex; }
+        
         .card { background: #1e2337; border-radius: 12px; padding: 12px; width: 100%; margin-bottom: 8px; border: 1px solid #3a3f58; text-align: left; }
         h3 { color: #ffe600; font-size: 12px; margin: 0 0 5px 0; }
-        input[type="text"], input[type="file"] { width: 100%; color: white; font-size: 12px; }
-        button { background: #ffe600; color: #000; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; margin: 5px; width: 80%; }
+        label { color: #aaa; font-size: 10px; display: block; margin-top: 5px; }
+        input[type="text"], input[type="file"] { width: 100%; color: white; font-size: 12px; margin-top: 2px; }
+        
+        button { background: #ffe600; color: #000; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; margin: 5px; width: 80%; transition: 0.2s; }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
         .btn-sec { background: #3a3f58; color: white; width: auto; }
-        .delete-btn { background: #ff4444; color: white; padding: 5px 10px; font-size: 10px; width: auto; margin-left: 10px; }
+        .delete-btn { background: #ff4444; color: white; padding: 5px 10px; font-size: 10px; width: auto; margin-left: 10px; border-radius: 5px; }
+        
         #local-list div { display: flex; align-items: center; justify-content: space-between; background: #1e2337; margin: 5px; padding: 5px 10px; border-radius: 8px; width: 100%; }
-        #bird { position: absolute; width: 42px; height: 42px; left: 80px; background-size: cover; border-radius: 8px; z-index: 50; display: none; }
-        .pipe { position: absolute; width: 45px; z-index: 10; border: 2px solid #000; background-size: 100% 100%; }
+        #score-ui { position: absolute; top: 20px; color: white; font-size: 30px; font-weight: bold; width: 100%; text-align: center; z-index: 100; display: none; }
+        
+        #bird { position: absolute; width: 42px; height: 42px; left: 80px; background-size: cover; border-radius: 8px; z-index: 50; display: none; transition: transform 0.1s; }
+        .pipe { position: absolute; width: 50px; z-index: 10; border: 2px solid #000; background-color: #ffe600; background-size: cover; }
     </style>
 </head>
-<body onmousedown="handleInput()">
+<body onmousedown="handleInput()" onkeydown="if(event.code==='Space') handleInput()">
 
     <div id="game-container">
+        <div id="score-ui">0</div>
+
         <div id="home-screen" class="screen active">
             <h1 id="display-title" style="color:#ffe600">FLOPPY GAMES</h1>
             <div id="hero-circle" style="width:100px; height:100px; border-radius:50%; border:3px solid #ffe600; margin:15px; background: url('hero.png') center/cover;"></div>
-            <button onclick="startGame()">PLAY DEFAULT</button>
+            <button onclick="startGame()">START GAME</button>
             <button class="btn-sec" id="open-builder-btn" onclick="openBuilder()">CREATE GAME (0/3)</button>
             <div id="local-list" style="margin-top:15px; width:100%"></div>
         </div>
 
         <div id="builder-screen" class="screen" style="justify-content: flex-start; overflow-y: auto;">
-            <h2 style="color:#ffe600">BUILDER</h2>
-            <div class="card"><h3>GAME ID</h3><input type="text" id="in-id" placeholder="unique-name"></div>
+            <h2 style="color:#ffe600">NEW GAME</h2>
+            <div class="card"><h3>1. UNIQUE ID</h3><input type="text" id="in-id" placeholder="game-name"></div>
             <div class="card">
-                <h3>VISUALS</h3>
-                <label>Bird (<500kb)</label><input type="file" id="in-bird">
-                <label>Pipe (<500kb)</label><input type="file" id="in-pipe">
-                <label>GameOver GIF (<1mb)</label><input type="file" id="in-gif">
+                <h3>2. IMAGES</h3>
+                <label>Bird (<500kb)</label><input type="file" id="in-bird" accept="image/*">
+                <label>Pipe (<500kb)</label><input type="file" id="in-pipe" accept="image/*">
+                <label>GameOver GIF (<1mb)</label><input type="file" id="in-gif" accept="image/gif,image/png,image/jpeg">
             </div>
             <div class="card">
-                <h3>SOUNDS</h3>
-                <label>Tap (<500kb)</label><input type="file" id="in-tap">
-                <label>Hit (<1mb)</label><input type="file" id="in-hit">
-                <label>BGM (<5mb)</label><input type="file" id="in-bgm">
-                <label>Voice (<3mb)</label><input type="file" id="in-voice">
+                <h3>3. AUDIO</h3>
+                <label>BGM (<5mb)</label><input type="file" id="in-bgm" accept="audio/*">
+                <label>Jump/Tap (<500kb)</label><input type="file" id="in-tap" accept="audio/*">
+                <label>Hit (<1mb)</label><input type="file" id="in-hit" accept="audio/*">
+                <label>Voice (<3mb)</label><input type="file" id="in-voice" accept="audio/*">
             </div>
             <button id="build-btn" onclick="buildGame()">PUBLISH GAME</button>
             <button class="btn-sec" onclick="location.reload()">BACK</button>
@@ -57,19 +67,24 @@
     </div>
 
     <script>
+        // SUPABASE CONFIG
         const SB_URL = 'https://tkxazrhpcpkyxpfxvuxf.supabase.co';
         const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRreGF6cmhwY3BreXhwZnh2dXhmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIwNzU3MDIsImV4cCI6MjA4NzY1MTcwMn0.cXNlAnqSONG5zv2HIFUreXp_3rg47x3NdQ-3FA5TxFE';
-        const supabase = supabase.createClient(SB_URL, SB_KEY);
+        const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
 
         const DEFAULTS = { bird:'hero.png', pipe:'pipe.jpg', gif:'gameover.gif', bgm:'bgm.mp3', tap:'tap.mp3', hit:'hit.mp3', voice:'voice.mp3' };
         let active = { ...DEFAULTS };
         const limits = { bird: 500000, pipe: 500000, gif: 1000000, tap: 500000, hit: 1000000, bgm: 5000000, voice: 3000000 };
 
+        // PHYSICS VARIABLES
+        let bY, bV, gravity = 0.4, score = 0, isPlay = false, pipes = [], anim;
+        const audio = { bgm: new Audio(), tap: new Audio(), hit: new Audio(), voice: new Audio() };
+
         async function init() {
             const urlParams = new URLSearchParams(window.location.search);
             const id = urlParams.get('id');
             if (id) {
-                const { data } = await supabase.from('games').select('config').eq('id', id).single();
+                const { data } = await supabaseClient.from('games').select('config').eq('id', id).single();
                 if (data) active = { ...DEFAULTS, ...data.config };
                 document.getElementById('display-title').innerText = id.toUpperCase();
                 document.getElementById('hero-circle').style.backgroundImage = `url(${active.bird})`;
@@ -83,7 +98,7 @@
             document.getElementById('open-builder-btn').innerText = `CREATE GAME (${local.length}/3)`;
             document.getElementById('local-list').innerHTML = local.map(n => `
                 <div>
-                    <span style="color:white;cursor:pointer" onclick="window.location.href='?id=${n}'">🎮 ${n}</span>
+                    <span style="color:white;cursor:pointer;font-weight:bold;" onclick="window.location.href='?id=${n}'">🎮 ${n}</span>
                     <button class="delete-btn" onclick="deleteGame('${n}')">DELETE</button>
                 </div>
             `).join('');
@@ -91,17 +106,17 @@
 
         function openBuilder() {
             const local = JSON.parse(localStorage.getItem('my_games') || '[]');
-            if (local.length >= 3) return alert("Limit reached! Delete a game first.");
+            if (local.length >= 3) return alert("Limit 3 games reached!");
             document.getElementById('home-screen').classList.remove('active');
             document.getElementById('builder-screen').classList.add('active');
         }
 
         async function buildGame() {
             const gid = document.getElementById('in-id').value.trim().toLowerCase().replace(/\s/g, '');
-            if (!gid) return alert("Enter Name");
+            if (!gid) return alert("Enter Game ID");
             
             const btn = document.getElementById('build-btn');
-            btn.innerText = "CHECKING FILES..."; btn.disabled = true;
+            btn.innerText = "UPLOADING..."; btn.disabled = true;
 
             let config = { id: gid };
             const fields = ['bird', 'pipe', 'gif', 'tap', 'hit', 'bgm', 'voice'];
@@ -110,52 +125,94 @@
                 const file = document.getElementById('in-'+f).files[0];
                 if (file) {
                     if (file.size > limits[f]) {
-                        alert(`${f} exceeds size limit!`);
-                        btn.disabled = false; return;
+                        alert(`${f} too large! Limit is ${limits[f]/1000000}MB`);
+                        btn.disabled = false; btn.innerText = "PUBLISH GAME"; return;
                     }
                     const path = `${gid}/${f}`;
-                    const { data, error } = await supabase.storage.from('game-assets').upload(path, file, { upsert: true });
+                    const { data, error } = await supabaseClient.storage.from('game-assets').upload(path, file, { upsert: true });
                     if (!error) {
-                        const { data: pUrl } = supabase.storage.from('game-assets').getPublicUrl(path);
+                        const { data: pUrl } = supabaseClient.storage.from('game-assets').getPublicUrl(path);
                         config[f] = pUrl.publicUrl;
                     }
                 }
             }
 
-            const { error } = await supabase.from('games').insert([{ id: gid, config: config }]);
+            const { error } = await supabaseClient.from('games').insert([{ id: gid, config: config }]);
             if (!error) {
                 const local = JSON.parse(localStorage.getItem('my_games') || '[]');
                 local.push(gid);
                 localStorage.setItem('my_games', JSON.stringify(local));
                 window.location.href = `?id=${gid}`;
             } else {
-                alert("Name taken!"); btn.disabled = false;
+                alert("Name already taken!"); btn.disabled = false; btn.innerText = "PUBLISH GAME";
             }
         }
 
         async function deleteGame(id) {
-            if (!confirm("Delete this game forever?")) return;
-            // 1. Delete Files
+            if (!confirm(`Delete ${id}?`)) return;
             const fields = ['bird', 'pipe', 'gif', 'tap', 'hit', 'bgm', 'voice'];
-            await supabase.storage.from('game-assets').remove(fields.map(f => `${id}/${f}`));
-            // 2. Delete Row
-            await supabase.from('games').delete().eq('id', id);
-            // 3. Update Local
+            await supabaseClient.storage.from('game-assets').remove(fields.map(f => `${id}/${f}`));
+            await supabaseClient.from('games').delete().eq('id', id);
             let local = JSON.parse(localStorage.getItem('my_games') || '[]');
-            local = local.filter(n => n !== id);
-            localStorage.setItem('my_games', JSON.stringify(local));
-            location.reload();
+            localStorage.setItem('my_games', JSON.stringify(local.filter(n => n !== id)));
+            window.location.href = window.location.pathname;
         }
 
-        // --- GAME LOGIC ---
+        // PHYSICS ENGINE
         function startGame() {
             document.getElementById('home-screen').classList.remove('active');
+            document.getElementById('score-ui').style.display = 'block';
             const b = document.getElementById('bird');
             b.style.display = 'block'; b.style.backgroundImage = `url(${active.bird})`;
-            // ... (Rest of your game physics engine goes here)
-            alert("Game starting with: " + active.bird);
+            
+            audio.bgm.src = active.bgm; audio.bgm.loop = true; audio.bgm.play().catch(()=>{});
+            audio.tap.src = active.tap; audio.hit.src = active.hit; audio.voice.src = active.voice;
+
+            bY = 300; bV = 0; score = 0; pipes = []; isPlay = true;
+            spawnPipe();
+            loop();
         }
-        function handleInput() { /* Jump logic */ }
+
+        function handleInput() { if(isPlay) { bV = -7; audio.tap.currentTime = 0; audio.tap.play().catch(()=>{}); } }
+
+        function spawnPipe() {
+            const gap = 170, topH = Math.random() * (window.innerHeight - 350) + 100;
+            const t = document.createElement('div'); t.className='pipe'; t.style.height=topH+'px'; t.style.top='0'; t.style.left='500px';
+            t.style.backgroundImage=`url(${active.pipe})`;
+            const b = document.createElement('div'); b.className='pipe'; b.style.height=(window.innerHeight-topH-gap)+'px'; b.style.bottom='0'; b.style.left='500px';
+            b.style.backgroundImage=`url(${active.pipe})`;
+            document.getElementById('game-container').appendChild(t);
+            document.getElementById('game-container').appendChild(b);
+            pipes.push({ t, b, x: 500, passed: false });
+        }
+
+        function loop() {
+            if(!isPlay) return;
+            bV += gravity; bY += bV;
+            const bird = document.getElementById('bird');
+            bird.style.top = bY + 'px';
+            bird.style.transform = `rotate(${bV * 3}deg)`;
+
+            if(bY < 0 || bY > window.innerHeight - 40) return gameOver();
+
+            pipes.forEach((p, i) => {
+                p.x -= 4; p.t.style.left = p.b.style.left = p.x + 'px';
+                const br = bird.getBoundingClientRect(), tr = p.t.getBoundingClientRect(), brr = p.b.getBoundingClientRect();
+                if (br.right > tr.left && br.left < tr.right && (br.top < tr.bottom || br.bottom > brr.top)) return gameOver();
+                if (p.x < 80 && !p.passed) { score++; p.passed = true; document.getElementById('score-ui').innerText = score; }
+                if (p.x < -60) { p.t.remove(); p.b.remove(); pipes.splice(i, 1); }
+            });
+
+            if(pipes.length === 0 || pipes[pipes.length-1].x < 250) spawnPipe();
+            anim = requestAnimationFrame(loop);
+        }
+
+        function gameOver() {
+            isPlay = false; cancelAnimationFrame(anim);
+            audio.bgm.pause(); audio.hit.play().catch(()=>{}); audio.voice.play().catch(()=>{});
+            alert("Game Over! Score: " + score);
+            location.reload();
+        }
     </script>
 </body>
 </html>
